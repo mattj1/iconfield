@@ -1,0 +1,147 @@
+
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+  <meta name="author" content="Paul Lewis" />
+  <meta name="viewport" content="width=device-width">
+  <title></title>
+  <style>
+    html, body {
+      padding: 0;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r79/three.js"></script>
+
+  <script>
+      var clock = new THREE.Clock();
+      var container, stats;
+      var camera, scene, renderer, particles, geometry, materials = [], parameters, i, h, color, sprite, size;
+      var mouseX = 0, mouseY = 0;
+      var windowHalfX = window.innerWidth / 2;
+      var windowHalfY = window.innerHeight / 2;
+
+      var textureFiles = [];
+      for(i = 1; i <= 72; i++) {
+        textureFiles.push("textures/Icon_" + i + "-0.png");
+      }
+
+      init();
+      animate();
+
+    function resetParticle(p) {
+
+    }
+    
+    function init() {
+    // Get the DOM element to attach to
+      container = document.querySelector('#container');
+      camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 20, 2000 );
+      camera.position.x = 0;
+      camera.position.y = 0;
+      camera.position.z = 700;
+      
+      scene = new THREE.Scene();
+      
+      var textureLoader = new THREE.TextureLoader();
+
+      for(i = 0; i < textureFiles.length; i++) {
+        sprite = textureLoader.load(textureFiles[i]);
+        sprite.minFilter = THREE.NearestMipMapNearestFilter;
+        sprite.magFilter = THREE.NearestFilter;
+
+        color  = [1.0, 1.0, 1.0];
+        size   = 20
+        materials[i] = new THREE.PointsMaterial( { size: size, map: sprite, blending: THREE.NormalBlending, depthTest: true, transparent : true, alphaTest:0.2} );
+
+        materials[i].color.setHSL( color[0], color[1], color[2] );
+      }       
+
+      for(i = 0; i < 200; i++) {
+          geometry2 = new THREE.Geometry();
+      
+          var vertex = new THREE.Vector3();
+          vertex.x = 0;
+          vertex.y = 0;
+          vertex.z = 0;
+
+          geometry2.vertices.push( vertex );
+
+          var materialIdx = Math.floor(Math.random() * materials.length);
+
+          particles = new THREE.Points( geometry2, materials[materialIdx]);
+
+          particles.position.set( Math.random() * 200 - 100, Math.random() * 200 - 100, Math.random() * camera.position.z)
+          scene.add(particles);
+      }
+
+      scene.background = new THREE.Color( 0x008080 );
+
+      renderer = new THREE.WebGLRenderer();
+
+      renderer.setPixelRatio( window.devicePixelRatio );
+      renderer.setSize( window.innerWidth, window.innerHeight );
+      container.appendChild( renderer.domElement );
+
+      window.addEventListener( 'resize', onWindowResize, false );
+    }
+
+    function onWindowResize() {
+      windowHalfX = window.innerWidth / 2;
+      windowHalfY = window.innerHeight / 2;
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize( window.innerWidth, window.innerHeight );
+    }
+
+    function render() {
+      renderer.render( scene, camera );
+    }
+
+    function update(delta) {
+      var ez = camera.position.z + 100;
+
+      for ( i = 0; i < scene.children.length; i ++ ) {
+        var object = scene.children[ i ];
+        if ( object instanceof THREE.Points ) {
+          object.position.set(object.position.x, object.position.y, object.position.z + delta * 300);
+
+          if(object.position.z > ez) {
+            object.position.set( Math.random() * 200 - 100, Math.random() * 200 - 100, -(object.position.z - ez))
+          }
+        }
+      }
+    }
+
+    var target_fps = 15;
+    var frame_sec = 1 / target_fps;
+    var accum = 0;
+
+    function animate() {
+
+          setTimeout( function() {
+            
+            accum += clock.getDelta();
+
+            if(accum > 2) accum = 2;
+
+            while(accum >= frame_sec) {
+              update(frame_sec);
+              accum -= frame_sec;
+            }
+
+            render();
+
+            requestAnimationFrame( animate );
+
+        }, 1000 / target_fps );
+
+        render();
+    }
+
+  </script>
+</body>
+</html>
